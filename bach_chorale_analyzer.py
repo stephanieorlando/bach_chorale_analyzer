@@ -1,13 +1,14 @@
 from music21 import *
+import csv
 
-chorale = corpus.parse('bwv43.11') # replace with chorale
+chorale = corpus.parse('bwv1.6') # replace with chorale
 # chorale.remove(chorale.parts[0]) # remove any instrumental parts or comment out
+choraleKey = 'F' # replace with key
+
 choraleChords = chorale.chordify()
 
 choraleReduction = chorale.partsToVoices(voiceAllocation=2) 
 choraleReduction.parts[-1][0].clef = clef.BassClef()
-
-choraleKey = 'G' # replace with key
 
 keySignature = key.Key(choraleKey)
 keySigAccidentals = set([str(a) for a in keySignature.alteredPitches] + [p.name for p in scale.MajorScale(choraleKey).pitches])
@@ -15,11 +16,17 @@ keySigAccidentals = set([str(a) for a in keySignature.alteredPitches] + [p.name 
 measure = choraleReduction.parts[-1].recurse().getElementsByClass('Measure')
 chords = choraleChords.recurse().getElementsByClass('Chord')
 
+rnAnalysisList = []
+fbChoraleList = []
+
 fbDictionary = open("Bach_Dictionary_Chords.txt", "r")
 fbDictFile = fbDictionary.read()
 
 rnAnalysisText = open("%s_rn_analysis.txt" % chorale.metadata.title, "w")
 rnAnalysisText.write("%s RN Analysis\n" % chorale.metadata.title)
+
+bach_pd_chords = open('Bach_Music21_PD-fermata.csv', mode='a')
+pd_chord_writer = csv.writer(bach_pd_chords, delimiter=',')
 
 def leadingTone(chord):
 	for s in chord.pitches:
@@ -36,7 +43,6 @@ def modulatedKey(leadingNote):
 		return modKey.parallel
 
 def harmonicAnalysis():
-	rnAnalysisList = []
 	for c in chords:
 		if leadingTone(c) is not None:
 			rn = roman.romanNumeralFromChord(c, modulatedKey(leadingTone(c)))
@@ -47,19 +53,27 @@ def harmonicAnalysis():
 			rnAnalysisList.append(rn.figure)
 	return rnAnalysisList
 	
-def figuredBassAnalysis():
-	fbChoraleList = []	
+def figuredBassAnalysis():	
 	for c in chords:
 		c.closedPosition(inPlace=True)
 		fb = c.annotateIntervals(returnList=True)
 		fbChoraleList.append(''.join(fb))
 	return fbChoraleList
+
+def makeFiveChords():
+	for i in range(len(chords) - 1):
+		if 'Fermata' in chords[i].classes:
+			pd_chord_writer.writerow([chorale.metadata.title, rnAnalysisList[i - 4], rnAnalysisList[i - 3], rnAnalysisList[i - 2], rnAnalysisList[i - 1], rnAnalysisList[i], chords[i].measureNumber])
+		elif hasattr(chords[i], 'expressions'):
+			for expression in chords[i].expressions:
+				if 'Fermata' in expression.classes:
+					pd_chord_writer.writerow([chorale.metadata.title, rnAnalysisList[i - 4], rnAnalysisList[i - 3], rnAnalysisList[i - 2], rnAnalysisList[i - 1], rnAnalysisList[i], chords[i].measureNumber])
 	
 def makeChoraleReduction():
 	
 	m = -1
 	
-	for c, r, f in zip(chords, harmonicAnalysis(), figuredBassAnalysis()):
+	for c, r, f in zip(chords, rnAnalysisList, fbChoraleList):
 		
 		if c.offset == 0.0:			
 			m += 1
@@ -95,6 +109,7 @@ def makeChoraleReduction():
 				rnAnalysisText.write("\n")
 			else:
 				rnAnalysisText.write("(%s) Beat: %s, Duration: %s\n" % (r, c.beatStr, c.quarterLength))
+
 	
 for m in measure:
 	if m.measureNumber % 4 == 0:
@@ -103,8 +118,13 @@ for m in measure:
 for s in choraleReduction.parts:
 	s.finalBarline = 'final'
 
+harmonicAnalysis()
+figuredBassAnalysis()
+makeFiveChords()
 makeChoraleReduction()
+
 choraleReduction.show()
 
 fbDictionary.close()
 rnAnalysisText.close()
+bach_pd_chords.close()
