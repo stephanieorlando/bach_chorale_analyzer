@@ -2,7 +2,7 @@ from music21 import *
 import csv
 
 chorale = corpus.parse('bwv1.6') # replace with chorale
-# chorale.remove(chorale.parts[0]) # remove any instrumental parts or comment out
+chorale.remove(chorale.parts[0]) # remove any instrumental parts or comment out
 choraleKey = 'F' # replace with key
 
 choraleChords = chorale.chordify()
@@ -72,6 +72,10 @@ def makeFiveChords():
 def makeChoraleReduction():
 	
 	m = -1
+
+	harmonicAnalysis()
+	figuredBassAnalysis()
+	makeFiveChords()
 	
 	for c, r, f in zip(chords, rnAnalysisList, fbChoraleList):
 		
@@ -118,11 +122,8 @@ for m in measure:
 for s in choraleReduction.parts:
 	s.finalBarline = 'final'
 
-harmonicAnalysis()
-figuredBassAnalysis()
-makeFiveChords()
-makeChoraleReduction()
 
+makeChoraleReduction()
 choraleReduction.show()
 
 fbDictionary.close()
