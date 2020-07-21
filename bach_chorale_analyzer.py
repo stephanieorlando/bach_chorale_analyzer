@@ -1,9 +1,9 @@
 from music21 import *
 import csv
 
-chorale = corpus.parse('bwv1.6') # replace with chorale
-chorale.remove(chorale.parts[0]) # remove any instrumental parts or comment out
-choraleKey = 'F' # replace with key
+chorale = corpus.parse('bwv43.11') # replace with chorale
+# chorale.remove(chorale.parts[0]) # remove any instrumental parts or comment out
+choraleKey = 'G' # replace with key
 
 choraleChords = chorale.chordify()
 
@@ -60,22 +60,23 @@ def figuredBassAnalysis():
 		fbChoraleList.append(''.join(fb))
 	return fbChoraleList
 
-def makeFiveChords():
-	for i in range(len(chords) - 1):
-		if 'Fermata' in chords[i].classes:
-			pd_chord_writer.writerow([chorale.metadata.title, rnAnalysisList[i - 4], rnAnalysisList[i - 3], rnAnalysisList[i - 2], rnAnalysisList[i - 1], rnAnalysisList[i], chords[i].measureNumber])
-		elif hasattr(chords[i], 'expressions'):
-			for expression in chords[i].expressions:
-				if 'Fermata' in expression.classes:
-					pd_chord_writer.writerow([chorale.metadata.title, rnAnalysisList[i - 4], rnAnalysisList[i - 3], rnAnalysisList[i - 2], rnAnalysisList[i - 1], rnAnalysisList[i], chords[i].measureNumber])
-	
+def makeFiveChords(n):
+	fiveChords = []
+	i = 0
+	while len(fiveChords) < 5:
+		if fbChoraleList[n - i] in fbDictFile and fbChoraleList[n - i] != '2':
+			fiveChords.append(rnAnalysisList[n - i])
+		i += 1
+	return chorale.metadata.title, fiveChords[4], fiveChords[3], fiveChords[2], fiveChords[1], fiveChords[0], chords[n].measureNumber
+
+
 def makeChoraleReduction():
-	
-	m = -1
 
 	harmonicAnalysis()
 	figuredBassAnalysis()
-	makeFiveChords()
+
+	m = -1
+	n = 0
 	
 	for c, r, f in zip(chords, rnAnalysisList, fbChoraleList):
 		
@@ -90,10 +91,12 @@ def makeChoraleReduction():
 				rnAnalysisText.write("%s Beat: %s, Duration: %s " % (r, c.beatStr, c.quarterLength))
 				if 'Fermata' in c.classes:
 					rnAnalysisText.write("Fermata\n")
+					pd_chord_writer.writerow(makeFiveChords(n))
 				elif hasattr(c, 'expressions'):
 					for expression in c.expressions:
 						if 'Fermata' in expression.classes:
 							rnAnalysisText.write("Fermata")
+							pd_chord_writer.writerow(makeFiveChords(n))
 				rnAnalysisText.write("\n")
 			else:
 				rnAnalysisText.write("(%s) Beat: %s, Duration: %s\n" % (r, c.beatStr, c.quarterLength))
@@ -106,13 +109,17 @@ def makeChoraleReduction():
 				rnAnalysisText.write("%s Beat: %s, Duration: %s " % (r, c.beatStr, c.quarterLength))
 				if 'Fermata' in c.classes:
 					rnAnalysisText.write("Fermata\n")
+					pd_chord_writer.writerow(makeFiveChords(n))
 				elif hasattr(c, 'expressions'):
 					for expression in c.expressions:
 						if 'Fermata' in expression.classes:
 							rnAnalysisText.write("Fermata")
+							pd_chord_writer.writerow(makeFiveChords(n))
 				rnAnalysisText.write("\n")
 			else:
 				rnAnalysisText.write("(%s) Beat: %s, Duration: %s\n" % (r, c.beatStr, c.quarterLength))
+
+		n += 1
 
 	
 for m in measure:
