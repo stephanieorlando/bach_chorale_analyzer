@@ -1,0 +1,25 @@
+Allowable figured bass symbols (chord inversions)
+* = expected/default
+
+[no symbol = root position]*
+53 [root position]
+5 [root position]
+3 [root position]
+6 [first inv]*
+63 [first inv]	
+64 [second inv]*
+4 [fourth in Cad64]
+7 [root position]*
+753 [root position]
+75 [root position]
+73 [root position]
+65 [first inv]*
+653 [first inv]
+43 [second inv]*
+643 [second inv]
+42 [third inv]*
+642 [third inv]
+
+BRACKET in TXT and OMIT from score any figures that don't match the above,
+EXCEPT when there's an accidental prior to the RN e.g., #iv (applied chord)
+
